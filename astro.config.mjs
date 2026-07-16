@@ -8,31 +8,16 @@ import tailwindcss from '@tailwindcss/vite';
 
 // https://astro.build/config
 export default defineConfig({
-  site: 'https://example.com',
+  site: 'https://imaimai.dev/',
   integrations: [mdx(), sitemap()],
 
   fonts: [
       {
-          provider: fontProviders.local(),
-          name: 'Atkinson',
-          cssVariable: '--font-atkinson',
-          fallbacks: ['sans-serif'],
-          options: {
-              variants: [
-                  {
-                      src: ['./src/assets/fonts/atkinson-regular.woff'],
-                      weight: 400,
-                      style: 'normal',
-                      display: 'swap',
-                  },
-                  {
-                      src: ['./src/assets/fonts/atkinson-bold.woff'],
-                      weight: 700,
-                      style: 'normal',
-                      display: 'swap',
-                  },
-              ],
-          },
+         provider: fontProviders.google(),
+         name: "M PLUS 1p",
+         cssVariable: "--font-mplus1p",
+         weights: [400, 500, 700], // 使いたい太さを指定
+         subsets: ["latin", "japanese"], // 日本語を含める場合は明示が必要な場合があります
       },
 	],
 

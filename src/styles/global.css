@@ -5,10 +5,12 @@
  */
 
 @import "tailwindcss";
+@import "@fontsource/m-plus-1p/400.css";
+@import "@fontsource/m-plus-1p/700.css";
 
 @theme {
   --color-accent: #0ecce9;
-  --font-sans: "M PLUS 1p", sans-serif;
+  --font-sans: var(--font-mplus1p);
 }
 
 :root {
@@ -24,7 +26,7 @@
 		0 16px 32px rgba(var(--gray), 33%);
 }
 body {
-	font-family: var(--font-atkinson);
+	font-family: var(--font-sans);
 	margin: 0;
 	padding: 0;
 	text-align: left;
