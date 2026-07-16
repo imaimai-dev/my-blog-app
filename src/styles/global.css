@@ -4,6 +4,13 @@
   License MIT: https://github.com/HermanMartinus/bearblog/blob/master/LICENSE.md
  */
 
+@import "tailwindcss";
+
+@theme {
+  --color-accent: #0ecce9;
+  --font-sans: "M PLUS 1p", sans-serif;
+}
+
 :root {
 	--accent: #2337ff;
 	--accent-dark: #000d8a;
