@@ -8,6 +8,8 @@
 @import "@fontsource/m-plus-1p/400.css";
 @import "@fontsource/m-plus-1p/700.css";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --color-accent: #0ecce9;
   --font-sans: var(--font-mplus1p);

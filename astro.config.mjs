@@ -6,10 +6,12 @@ import { defineConfig, fontProviders } from 'astro/config';
 
 import tailwindcss from '@tailwindcss/vite';
 
+import react from '@astrojs/react';
+
 // https://astro.build/config
 export default defineConfig({
   site: 'https://imaimai.dev/',
-  integrations: [mdx(), sitemap()],
+  integrations: [mdx(), sitemap(), react()],
 
   fonts: [
       {
@@ -19,7 +21,7 @@ export default defineConfig({
          weights: [400, 500, 700], // 使いたい太さを指定
          subsets: ["latin", "japanese"], // 日本語を含める場合は明示が必要な場合があります
       },
-	],
+    ],
 
   vite: {
     plugins: [tailwindcss()],
