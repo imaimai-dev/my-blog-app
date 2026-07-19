@@ -4,9 +4,9 @@ import HeaderLink from './HeaderLink.astro';
 import DarkModeToggle from './DarkModeToggle.tsx';
 ---
 
-<header>
+<header class="flex items-center justify-between p-4">
 	<nav>
-		<h2><a href="/">{SITE_TITLE}</a></h2>
+		<h2><a href="/" class="font-bold text-lg">{SITE_TITLE}</a></h2>
 		<div class="internal-links">
 			<HeaderLink href="/">Home</HeaderLink>
 			<HeaderLink href="/blog">Blog</HeaderLink>
@@ -41,6 +41,7 @@ import DarkModeToggle from './DarkModeToggle.tsx';
 				>
 			</a>
 		</div>
+		<DarkModeToggle client:load/>
 	</nav>
 </header>
 <style>
