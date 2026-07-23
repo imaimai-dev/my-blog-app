@@ -1,8 +1,7 @@
 import type { APIRoute } from 'astro';
 import satori from 'satori';
-import { Resvg, initWasm } from '@resvg/resvg-wasm';
+import { Resvg } from '@resvg/resvg-js';
 import { getCollection } from 'astro:content';
-import resvgWasm from '@resvg/resvg-wasm/index_bg.wasm?url';
 import { readFileSync  } from "node:fs";
 import { fileURLToPath } from 'node:url';
 
@@ -15,9 +14,6 @@ const boldFont = readFileSync(
   fileURLToPath(new URL('../../../assets/fonts/MPLUS1p-Bold.ttf', import.meta.url))
 );
 
-// resvgのWASMを一度だけ初期化するためのフラグです。
-let wasmInitialized = false;
-
 // 全記事分の静的ページ(この場合は画像)のパスを生成します。
 export async function getStaticPaths() {
   const posts = await getCollection('blog');
@@ -29,12 +25,6 @@ export async function getStaticPaths() {
 
 export const GET: APIRoute = async ({ props }) => {
   const { post } = props as any;
-
-  // 初回リクエスト時のみWASMを初期化します。
-  if (!wasmInitialized) {
-    await initWasm(fetch(resvgWasm));
-    wasmInitialized = true;
-  }
 
   // 記事タイトルを使って、OGP画像のレイアウトをSVGとして生成します。
   const svg = await satori(
