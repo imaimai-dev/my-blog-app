@@ -2,17 +2,6 @@ import type { APIRoute } from 'astro';
 import satori from 'satori';
 import { Resvg } from '@resvg/resvg-js';
 import { getCollection } from 'astro:content';
-import { readFileSync  } from "node:fs";
-import { fileURLToPath } from 'node:url';
-
-// フォントファイルをビルド時に読み込む(Node.jsの標準機能fs.readFileSyncでフォントファイルを直接読み込む)
-const regularFont = readFileSync(
-  fileURLToPath(new URL('../../../assets/fonts/MPLUS1p-Regular.ttf', import.meta.url))
-);
-
-const boldFont = readFileSync(
-  fileURLToPath(new URL('../../../assets/fonts/MPLUS1p-Bold.ttf', import.meta.url))
-);
 
 // 全記事分の静的ページ(この場合は画像)のパスを生成します。
 export async function getStaticPaths() {
@@ -23,10 +12,28 @@ export async function getStaticPaths() {
   }));
 }
 
+// 絵文字の文字列を、Twemojiで使われているコードポイント表記(16進数)に変換します。
+function emojiToCodepoint(emoji: string): string {
+  return Array.from(emoji)
+  .map((char) => char.codePointAt(0)!.toString(16))
+  .join('-');
+}
+
 export const GET: APIRoute = async ({ props }) => {
   const { post } = props as any;
+  // emojiが未設定の記事のために、デフォルトの絵文字を用意しておきます。
+  const emoji = post.data.emoji ?? '📝';
 
-  // 記事タイトルを使って、OGP画像のレイアウトをSVGとして生成します。
+  // Twemoji(絵文字の共通デザイン素材)のSVGをビルド時に取得します。
+  const codepoint = emojiToCodepoint(emoji);
+  const svgUrl = `https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/${codepoint}.svg`;
+  const res = await fetch(svgUrl);
+  const svgText = await res.text();
+  // 取得したSVGを、画像として埋め込めるデータURI形式に変換します。
+  const emojiDataUri = `data:image/svg+xml;base64,${Buffer.from(svgText).toString('base64')}`;
+
+
+  // 絵文字を中央に配置しただけのシンプルなレイアウトを生成します。
   const svg = await satori(
     {
       type: 'div',
@@ -35,23 +42,17 @@ export const GET: APIRoute = async ({ props }) => {
           width: '1200px',
           height: '630px',
           display: 'flex',
-          flexDirection: 'column',
           justifyContent: 'center',
           alignItems: 'center',
-          background: 'linear-gradient(135deg, #0ea5e9 0%, #0369a1 100%)',
-          color: 'white',
+          background: '#dbeafe', // Zennのような淡い背景色
         },
         children: [
           {
-            type: 'div',
+            type: 'img',
             props: {
-              style: {
-                fontSize: 64,
-                fontWeight: 700,
-                padding: '0 80px',
-                textAlign: 'center',
-              },
-              children: post.data.title,
+              src: emojiDataUri,
+              width: 300,
+              height: 300,
             },
           },
         ],
@@ -60,17 +61,12 @@ export const GET: APIRoute = async ({ props }) => {
     {
       width: 1200,
       height: 630,
-      fonts: [
-        { name: 'M PLUS 1p', data: regularFont, weight: 400, style: 'normal' },
-        { name: 'M PLUS 1p', data: boldFont, weight: 700, style: 'normal' },
-      ],
+      fonts: [],
     }
   );
 
   // 生成したSVGをPNG画像に変換します。
-  const resvg = new Resvg(svg, {
-    fitTo: { mode: 'width', value: 1200 },
-  });
+  const resvg = new Resvg(svg, { fitTo: { mode: 'width', value: 1200 } });
   const png = resvg.render().asPng();
 
   // PNG画像をレスポンスとして返します。
