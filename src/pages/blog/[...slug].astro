@@ -1,7 +1,9 @@
 ---
+// 記事データの取得・型定義・レイアウトをimportします。
 import { type CollectionEntry, getCollection, render } from 'astro:content';
 import BlogPost from '../../layouts/BlogPost.astro';
 
+// 全記事分の静的ページを生成します。
 export async function getStaticPaths() {
 	const posts = await getCollection('blog');
 	return posts.map((post) => ({
@@ -12,9 +14,11 @@ export async function getStaticPaths() {
 type Props = CollectionEntry<'blog'>;
 
 const post = Astro.props;
+// 記事本文をHTMLとしてレンダリングします。
 const { Content } = await render(post);
 ---
 
-<BlogPost {...post.data}>
+<!-- titleやdescriptionのdataに加えて、OGP画像のURL組み立てに使うidも渡します。 -->
+<BlogPost {...post.data} id={post.id}>
 	<Content />
 </BlogPost>
