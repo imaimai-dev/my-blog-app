@@ -8,10 +8,12 @@ import tailwindcss from '@tailwindcss/vite';
 
 import react from '@astrojs/react';
 
+import svelte from '@astrojs/svelte';
+
 // https://astro.build/config
 export default defineConfig({
   site: 'https://imaimai.dev/',
-  integrations: [mdx(), sitemap(), react()],
+  integrations: [mdx(), sitemap(), react(), svelte()],
 
   fonts: [
       {
