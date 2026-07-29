@@ -2,6 +2,7 @@
 // 記事データの取得に必要な関数と、各種コンポーネントをimportします。
 import { getCollection } from 'astro:content';
 import BaseHead from '../../components/BaseHead.astro';
+import BlogList from '../../components/BlogList.svelte';
 import Footer from '../../components/Footer.astro';
 import Header from '../../components/Header.astro';
 
@@ -11,6 +12,16 @@ import { SITE_DESCRIPTION, SITE_TITLE } from '../../consts';
 const posts = (await getCollection('blog')).sort(
 	(a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
 );
+
+/* 
+Svelteアイランドに渡すため、必要なフィールドだけを取り出した配列に変換します。	
+pubDateのようなDate型はそのままだと渡せないため、ここでは含めていません。
+ */
+const postSummaries = posts.map((post) => ({
+		id: post.id,
+		title: post.data.title,
+		description: post.data.description,
+}));
 ---
 
 <!doctype html>
@@ -19,33 +30,16 @@ const posts = (await getCollection('blog')).sort(
 		<!-- ページのタイトル・メタタグ・OGP設定などをまとめて出力します。 -->
 		<BaseHead title={SITE_TITLE} description={SITE_DESCRIPTION} />
 	</head>
-	<body>
+	<body class="bg-gray-50 dark:bg-gray-950">
 		<!-- サイト共通のヘッダー(ナビゲーション・ダークモード切り替えなど)です。 -->
 		<Header />
-		<!-- 記事一覧の本体です。Tailwindのクラスでレイアウトを組んでいます。 -->
-		<main class="max-w-4xl mx-auto px-6 py-20 bg-white dark:bg-gray-900">
-			<div class="flex flex-col gap-24">
-				{posts.map((post) => (
-					// 各記事カード全体をリンクにしています。
-		      <a href={`/blog/${post.id}`} class="group block">
-					{/* 絵文字+背景色のサムネイル画像を記事idから自動生成されたURLで表示します。 */}
-		        <img
-		          src={`/api/og/${post.id}.png`}
-		          alt={post.data.title}
-		          class="w-full aspect-[16/9] object-cover rounded-lg mb-6 transition-transform duration-500 group-hover:scale-[1.02]"
-		        />
-						{/* 記事タイトルです。 */}
-		        <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-		          {post.data.title}
-		        </h2>
-						{/* 記事の概要文です。 */}
-		        <p class="text-gray-500 dark:text-gray-400 leading-relaxed">
-		          {post.data.description}
-		        </p>
-		      </a>
-    		))}
-			</div>
+
+		<main class="max-w-5xl mx-auto px-6 py-20">
+			<h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-10">Blog</h1>
+			<!-- 記事一覧本体です。表示形式の切り替えボタンごとSvelteアイランドに任せています。 -->
+			<BlogList posts={postSummaries} client:load />
 		</main>
+
 		<!-- サイト共通のフッターです。 -->
 		<Footer />
 	</body>
