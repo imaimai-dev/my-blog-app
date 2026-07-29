@@ -39,7 +39,8 @@ const posts = (await getCollection('blog'))
 				<h2 class="text-base font-semibold text-gray-700 dark:text-gray-200 mb-10">
 					最新の記事
 				</h2>
-				<div class="flex flex-col gap-8">
+				<!-- 画面幅に応じて1列〜3列に変わるグリッドです。 -->
+				<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
 					{
 						posts.map((post) => (
 							// 各記事カード全体をリンクにしています。
@@ -55,7 +56,7 @@ const posts = (await getCollection('blog'))
 								/>
 								{/* 記事タイトルです。 */}
 								<div class="p-6">
-								<h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">
+								<h3 class="text-lg font-bold text-gray-900 dark:text-white mb-2">
 									{post.data.title}
 								</h3>
 								{/* 記事の概要文です。 */}
