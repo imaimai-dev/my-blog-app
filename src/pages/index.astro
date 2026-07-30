@@ -2,15 +2,30 @@
 // 記事データの取得に必要な関数と、各種コンポーネントをimportします。
 import { getCollection } from 'astro:content';
 import BaseHead from '../components/BaseHead.astro';
+import BlogList from '../components/BlogList.svelte';
 import Footer from '../components/Footer.astro';
 import Header from '../components/Header.astro';
 import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
 
-// 全記事を取得し、公開日が新しい順に並び替えます。
-// トップページには直近3件だけを表示するため、sliceで絞り込みます。
+/* 
+・全記事を取得し、公開日が新しい順に並び替えます。
+・トップページには直近3件だけを表示するため、sliceで絞り込みます。
+・pubDateが同じ場合は、idの文字列比較で順序を確定させます(同日公開の記事が不定な順序にならないようにするため)。
+*/
 const posts = (await getCollection('blog'))
-		.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
+		.sort((a, b) => {
+			const dateDiff = b.data.pubDate.valueOf() - a.data.pubDate.valueOf();
+			if (dateDiff !== 0) return dateDiff;
+			return a.id.localeCompare(b.id);
+		})
 		.slice(0, 3);
+	
+// Svelteアイランドに渡すため、必要なフィールドだけを取り出した配列に変換します。
+const postSummaries = posts.map((post) => ({
+	id: post.id,
+	title: post.data.title,
+	description: post.data.description,
+}));
 ---
 
 <!doctype html>
@@ -36,38 +51,12 @@ const posts = (await getCollection('blog'))
 
 			<!-- 最新記事セクションです。 -->
 			 <section class="pb-20">
-				<h2 class="text-base font-semibold text-gray-700 dark:text-gray-200 mb-10">
+				<h2 class="text-base font-semibold text-gray-700 dark:text-gray-200 mb-6">
 					最新の記事
 				</h2>
-				<!-- 画面幅に応じて1列〜3列に変わるグリッドです。 -->
-				<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-					{
-						posts.map((post) => (
-							// 各記事カード全体をリンクにしています。
-							<a
-								href={`/blog/${post.id}`}
-								class="group block bg-white dark:bg-gray-900 rounded-xl shadow-sm hover:shadow-md transition-shadow overflow-hidden"
-							>
-								{/* 絵文字+背景色のサムネイル画像を表示します。 */}
-								<img
-										src={`/api/og/${post.id}.png`}
-										alt={post.data.title}
-										class="w-full aspect-video object-cover transition-transform duration-500 group-hover:scale-[1.02]"
-								/>
-								{/* 記事タイトルです。 */}
-								<div class="p-6">
-								<h3 class="text-lg font-bold text-gray-900 dark:text-white mb-2">
-									{post.data.title}
-								</h3>
-								{/* 記事の概要文です。 */}
-								<p class="text-gray-500 dark:text-gray-400 leading-relaxed text-sm">
-									{post.data.description}
-								</p>
-								</div>
-							</a>
-						))
-					}
-				</div>
+				<!-- 記事一覧ページと同じSvelteアイランドを再利用し、グリッド/リスト切り替えの挙動を統一しています。 -->
+				<BlogList posts={postSummaries} client:load />
+				
 				<!-- 記事一覧ページへのリンクです。 -->
 				<a
 					href="/blog"
