@@ -8,15 +8,17 @@ import Header from '../../components/Header.astro';
 
 import { SITE_DESCRIPTION, SITE_TITLE } from '../../consts';
 
-// 全記事を取得し、公開日が新しい順に並び替えます。
-const posts = (await getCollection('blog')).sort(
-	(a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
-);
-
-/* 
-Svelteアイランドに渡すため、必要なフィールドだけを取り出した配列に変換します。	
-pubDateのようなDate型はそのままだと渡せないため、ここでは含めていません。
+/*
+ 全記事を取得し、公開日が新しい順に並び替えます。
+ pubDateが同じ場合は、idの文字列比較で順序を確定させます(同日公開の記事が不定な順序にならないようにするため)。
  */
+const posts = (await getCollection('blog')).sort((a, b) => {
+	const dateDiff = b.data.pubDate.valueOf() - a.data.pubDate.valueOf();
+	if (dateDiff !== 0) return dateDiff;
+	return a.id.localeCompare(b.id);
+});
+
+// Svelteアイランドに渡すため、必要なフィールドだけを取り出した配列に変換します。	
 const postSummaries = posts.map((post) => ({
 		id: post.id,
 		title: post.data.title,
