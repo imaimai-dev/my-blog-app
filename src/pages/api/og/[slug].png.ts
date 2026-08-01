@@ -12,25 +12,45 @@ export async function getStaticPaths() {
   }));
 }
 
-// 絵文字の文字列を、Twemojiで使われているコードポイント表記(16進数)に変換します。
+/*
+ 絵文字の文字列を、Twemojiのファイル名で使われているコードポイント表記(16進数)に変換します。
+ Variation Selector-16(fe0f)はTwemoji側のファイル名には基本的に含まれないため変換の対象から除外します。
+*/
 function emojiToCodepoint(emoji: string): string {
-  return Array.from(emoji)
-  .map((char) => char.codePointAt(0)!.toString(16))
-  .join('-');
+	return Array.from(emoji)
+		.map((char) => char.codePointAt(0)!)
+		.filter((codePoint) => codePoint !== 0xfe0f)
+		.map((codePoint) => codePoint.toString(16))
+		.join('-');
+}
+
+// 指定したコードポイントのTwemoji SVGを取得し、画像埋め込み用のdata URIに変換します。
+// 取得に失敗した場合は、デフォルトの📝の画像を代わりに使うことで、ページ全体が壊れるのを防ぎます。
+async function fetchEmojiDataUri(codepoint: string): Promise<string> {
+	const svgUrl = `https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/${codepoint}.svg`;
+	const res = await fetch(svgUrl);
+
+	if (!res.ok) {
+		// 指定の絵文字が見つからなかった場合、デフォルトの📝(1f4dd)を代わりに取得します。
+		const fallbackRes = await fetch(
+			'https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f4dd.svg',
+		);
+		const fallbackSvgText = await fallbackRes.text();
+		return `data:image/svg+xml;base64,${Buffer.from(fallbackSvgText).toString('base64')}`;
+	}
+
+	const svgText = await res.text();
+	return `data:image/svg+xml;base64,${Buffer.from(svgText).toString('base64')}`;
 }
 
 export const GET: APIRoute = async ({ props }) => {
-  const { post } = props as any;
-  // emojiが未設定の記事のために、デフォルトの絵文字を用意しておきます。
-  const emoji = post.data.emoji ?? '📝';
+	const { post } = props as any;
+	// emojiが未設定の記事のために、デフォルトの絵文字を用意しておきます。
+	const emoji = post.data.emoji ?? '📝';
 
-  // Twemoji(絵文字の共通デザイン素材)のSVGをビルド時に取得します。
-  const codepoint = emojiToCodepoint(emoji);
-  const svgUrl = `https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/${codepoint}.svg`;
-  const res = await fetch(svgUrl);
-  const svgText = await res.text();
-  // 取得したSVGを、画像として埋め込めるデータURI形式に変換します。
-  const emojiDataUri = `data:image/svg+xml;base64,${Buffer.from(svgText).toString('base64')}`;
+	// 絵文字をコードポイントに変換し、対応するTwemoji画像を取得します。
+	const codepoint = emojiToCodepoint(emoji);
+	const emojiDataUri = await fetchEmojiDataUri(codepoint);
 
 
   // 絵文字を中央に配置しただけのシンプルなレイアウトを生成します。
