@@ -1,6 +1,6 @@
 ---
 title: "fourth post"
-description: ""
+description: "Lorem ipsum dolor sit amet"
 pubDate: 2026-07-30T22:15:59.630Z
 emoji: "♨️"
 ---
