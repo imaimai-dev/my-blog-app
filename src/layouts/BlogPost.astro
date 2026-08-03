@@ -1,61 +1,125 @@
 ---
-// 型定義・各種コンポーネントをimportします。
 import type { CollectionEntry } from 'astro:content';
-import BaseHead from '../components/BaseHead.astro';
-import Footer from '../components/Footer.astro';
-import FormattedDate from '../components/FormattedDate.astro';
-import Header from '../components/Header.astro';
+import BaseLayout from './BaseLayout.astro';
 
-// dataに加えて、OGP画像URLの組み立てに使うidも受け取る型定義にします。
-type Props = CollectionEntry<'blog'>['data'] & { id: string };
+interface Props {
+  post: CollectionEntry<'blog'>;
+}
 
-const { title, description, pubDate, updatedDate, id } = Astro.props;
+const { post } = Astro.props;
+const { title, description, pubDate, updatedDate, tags, emoji } = post.data;
+const image = `/api/og/${post.id}.png`;
+const formatDate = (date: Date) =>
+  new Intl.DateTimeFormat('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit' }).format(date);
 ---
 
-<html lang="ja">
-	<head>
-		<!-- ページのタイトル・メタタグ・OGP設定などをまとめて出力します。 -->
-		<BaseHead title={title} description={description} />
-	</head>
+<BaseLayout title={title} description={description} image={image}>
+  <article class="article-shell">
+    <header class="article-header site-container">
+      <a class="back-link" href="/blog/">← 記事一覧へ</a>
+      <div class="article-hero">
+        <img src={image} alt="" width="1200" height="630" />
+      </div>
+      <div class="article-heading">
+        <div class="article-meta">
+          <time datetime={pubDate.toISOString()}>{formatDate(pubDate)}</time>
+          {updatedDate && <span>更新 {formatDate(updatedDate)}</span>}
+          <span>{emoji}</span>
+        </div>
+        <h1>{title}</h1>
+        {description && <p>{description}</p>}
+        <div class="article-tags">{tags.map((tag) => <span>#{tag}</span>)}</div>
+      </div>
+    </header>
 
-	<body class="bg-white dark:bg-gray-900">
-		<!-- サイト共通のヘッダーです。 -->
-		<Header />
+    <div class="article-body site-container">
+      <div class="prose prose-lg prose-blog"><slot /></div>
+    </div>
+  </article>
+</BaseLayout>
 
-		<main class="max-w-3xl mx-auto px-6 py-20">
-			<article>
-				<!-- 絵文字+背景色のサムネイル画像を記事上部に大きく表示します。 -->
-				<img
-					src={`/api/og/${id}.png`}
-					alt={title}
-					class="w-full aspect-[16/9] object-cover rounded-lg mb-10"
-				/>
+<style>
+  .article-shell {
+    padding: clamp(3.4rem, 7vw, 6rem) 0 2rem;
+  }
 
-				<!-- 記事タイトルと日付をまとめたヘッダー部分です。 -->
-				<div class="mb-10">
-					<h1 class="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
-						{title}
-					</h1>
-					<div class="text-sm text-gray-500 dark:text-gray-400">
-						<FormattedDate date={pubDate} />
-						{
-							updatedDate && (
-								<span class="italic ml-2">
-									(更新日: <FormattedDate date={updatedDate} />)
-								</span>
-							)
-						}
-					</div>
-				</div>
+  .article-header,
+  .article-body {
+    width: min(820px, calc(100% - 40px));
+  }
 
-				<!-- 記事本文です。prose(Typographyプラグイン)で見出しや段落を整形します。 -->
-				<div class="prose dark:prose-invert max-w-none">
-					<slot />
-				</div>
-			</article>
-		</main>
+  .back-link {
+    display: inline-flex;
+    margin-bottom: 1.3rem;
+    color: var(--muted);
+    font-size: 0.82rem;
+    font-weight: 700;
+  }
 
-		<!-- サイト共通のフッターです。 -->
-		<Footer />
-	</body>
-</html>
+  .back-link:hover { color: var(--brand); }
+
+  .article-hero {
+    overflow: hidden;
+    border: 1px solid var(--line);
+    border-radius: 28px;
+    box-shadow: var(--shadow);
+  }
+
+  .article-hero img {
+    width: 100%;
+    height: auto;
+  }
+
+  .article-heading {
+    padding: clamp(2rem, 5vw, 3.4rem) 0 1.5rem;
+  }
+
+  .article-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.65rem;
+    color: var(--subtle);
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.72rem;
+  }
+
+  h1 {
+    margin: 0.8rem 0 0;
+    color: var(--text);
+    font-size: clamp(2rem, 6vw, 3.6rem);
+    font-weight: 700;
+    letter-spacing: -0.055em;
+    line-height: 1.32;
+  }
+
+  .article-heading > p {
+    margin: 1rem 0 0;
+    color: var(--muted);
+    font-size: 1rem;
+    line-height: 1.9;
+  }
+
+  .article-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.7rem;
+    margin-top: 1.1rem;
+    color: var(--brand);
+    font-size: 0.8rem;
+  }
+
+  .article-body {
+    border-top: 1px solid var(--line);
+    padding-top: clamp(2rem, 5vw, 3.5rem);
+  }
+
+  @media (max-width: 640px) {
+    .article-header,
+    .article-body {
+      width: min(100% - 24px, 820px);
+    }
+
+    .article-hero { border-radius: 20px; }
+  }
+</style>

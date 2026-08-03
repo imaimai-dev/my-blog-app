@@ -1,63 +1,65 @@
-# Astro Starter Kit: Blog
+# imaimai.blog rebuild
 
-```sh
-npm create astro@latest -- --template blog
+Astro + Cloudflare Workersで構築する個人技術ブログです。
+
+## 主な構成
+
+- Astro 7 / Static Site Generation
+- Tailwind CSS v4（CSS-first）
+- Svelte 5 island：記事検索、タグ絞り込み、グリッド・リスト切り替え
+- React island：ダークモード
+- Astro Content Collections
+- Satori + Resvg + Twemoji：記事サムネイルの自動生成
+- Cloudflare Workers Static Assets / Workers Builds
+
+## ローカル起動
+
+```bash
+npm install
+npm run dev
 ```
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+本番ビルド：
 
-Features:
-
-- ✅ Minimal styling (make it your own!)
-- ✅ 100/100 Lighthouse performance
-- ✅ SEO-friendly with canonical URLs and Open Graph data
-- ✅ Sitemap support
-- ✅ RSS Feed support
-- ✅ Markdown & MDX support
-
-## 🚀 Project Structure
-
-Inside of your Astro project, you'll see the following folders and files:
-
-```text
-├── public/
-├── src/
-│   ├── assets/
-│   ├── components/
-│   ├── content/
-│   ├── layouts/
-│   └── pages/
-├── astro.config.mjs
-├── README.md
-├── package.json
-└── tsconfig.json
+```bash
+npm run build
 ```
 
-Astro looks for `.astro` or `.md` files in the `src/pages/` directory. Each page is exposed as a route based on its file name.
+Workersに近い形で確認：
 
-There's nothing special about `src/components/`, but that's where we like to put any Astro/React/Vue/Svelte/Preact components.
+```bash
+npm run preview:worker
+```
 
-The `src/content/` directory contains "collections" of related Markdown and MDX documents. Use `getCollection()` to retrieve posts from `src/content/blog/`, and type-check your frontmatter using an optional schema. See [Astro's Content Collections docs](https://docs.astro.build/en/guides/content-collections/) to learn more.
+## Cloudflare Workers Builds
 
-Any static assets, like images, can be placed in the `public/` directory.
+- Build command: `npm run build`
+- Deploy command: `npx wrangler deploy`
+- Production branch: `main`
+- Worker名: `my-blog-app`（`wrangler.jsonc`のnameと一致させます）
 
-## 🧞 Commands
+カスタムドメインは `wrangler.jsonc` の `routes` にある `imaimai.dev` を使用します。別ドメインにする場合は、`astro.config.mjs` の `site` も同時に変更してください。
 
-All commands are run from the root of the project, from a terminal:
+## 記事の追加
 
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
+```bash
+npm run new-post -- astro-islands "Astroのアイランドアーキテクチャを試す"
+```
 
-## 👀 Want to learn more?
+`src/content/blog/astro-islands.md` が `draft: true` で作成されます。本文とfrontmatterを編集し、公開時に `draft: false` へ変更します。
 
-Check out [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+## 既存リポジトリへ反映する場合
 
-## Credit
+1. 現在のブランチをバックアップします。
+2. このフォルダの内容をリポジトリのルートへ上書きします。
+3. 既存の `package-lock.json` を削除します。
+4. `npm install` を実行して新しいlockfileを生成します。
+5. `npm run check && npm run build` を実行します。
+6. 画面確認後にcommit/pushします。
 
-This theme is based off of the lovely [Bear Blog](https://github.com/HermanMartinus/bearblog/).
+## 最初に変更する箇所
+
+- `src/consts.ts`：SNS URL、説明文
+- `src/pages/about.astro`：プロフィール本文
+- `src/content/blog/`：サンプル記事
+- `astro.config.mjs` / `wrangler.jsonc`：本番ドメイン
