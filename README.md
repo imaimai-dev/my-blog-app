@@ -2,17 +2,16 @@
 
 Astro + Cloudflare Workersで構築する個人技術ブログです。
 
-## 主な構成
+## 技術スタック
 
-- Astro 7 / Static Site Generation
-- Tailwind CSS v4（CSS-first）
-- Svelte 5 island：記事検索、タグ絞り込み、グリッド・リスト切り替え
-- React island：ダークモード
-- Astro Content Collections
-- Satori + Resvg + Twemoji：記事サムネイルの自動生成
-- Cloudflare Workers Static Assets / Workers Builds
+- Astro
+- TypeScript
+- Tailwind CSS
+- Svelte
+- React
+- Cloudflare Workers
 
-## ローカル起動
+## 開発
 
 ```bash
 npm install
