@@ -7,7 +7,7 @@
     description: string;
     pubDate: string;
     emoji: string;
-    tags: string[];
+    tags?: string[];
     ogImage: string;
   };
 
@@ -22,17 +22,33 @@
   let selectedTag = $state('all');
   let view = $state<'grid' | 'list'>('grid');
 
-  const tags = $derived([...new Set(posts.flatMap((post) => post.tags))].sort());
+  /**
+   * tagsが未設定の記事でも一覧表示が停止しないように、
+   * 必ず文字列配列へ正規化します。
+   */
+  const getPostTags = (post: Post): string[] => {
+    return Array.isArray(post.tags) ? post.tags : [];
+  };
+
+  const tags = $derived(
+    [...new Set(posts.flatMap((post) => getPostTags(post)))].sort(),
+  );
+
   const filteredPosts = $derived(
     posts
       .filter((post) => {
         const keyword = query.trim().toLowerCase();
+        const postTags = getPostTags(post);
+
         const matchesQuery =
           keyword.length === 0 ||
           post.title.toLowerCase().includes(keyword) ||
           post.description.toLowerCase().includes(keyword) ||
-          post.tags.some((tag) => tag.toLowerCase().includes(keyword));
-        const matchesTag = selectedTag === 'all' || post.tags.includes(selectedTag);
+          postTags.some((tag) => tag.toLowerCase().includes(keyword));
+
+        const matchesTag =
+          selectedTag === 'all' || postTags.includes(selectedTag);
+
         return matchesQuery && matchesTag;
       })
       .slice(0, limit ?? posts.length),
@@ -47,8 +63,12 @@
 
   onMount(() => {
     if (!showControls) return;
+
     const tag = new URLSearchParams(window.location.search).get('tag');
-    if (tag && tags.includes(tag)) selectedTag = tag;
+
+    if (tag && tags.includes(tag)) {
+      selectedTag = tag;
+    }
   });
 </script>
 
@@ -98,7 +118,9 @@
         <h2>{post.title}</h2>
         <p>{post.description}</p>
         <div class="tag-row">
-          {#each post.tags.slice(0, 3) as tag}<span>#{tag}</span>{/each}
+          {#each getPostTags(post).slice(0, 3) as tag}
+            <span>#{tag}</span>
+          {/each}
         </div>
       </div>
     </a>
