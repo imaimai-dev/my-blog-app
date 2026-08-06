@@ -314,6 +314,7 @@
     line-height: 1.6;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
+    line-clamp: 2;
   }
 
   p {
@@ -325,6 +326,7 @@
     line-height: 1.8;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
+    line-clamp: 2;
   }
 
   .tag-row {
@@ -359,10 +361,6 @@
 
   .post-list h2 {
     font-size: 1.2rem;
-  }
-
-  .post-list p {
-    -webkit-line-clamp: 2;
   }
 
   .empty-state {
