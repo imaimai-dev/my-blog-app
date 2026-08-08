@@ -17,10 +17,15 @@
     showControls?: boolean;
   };
 
+type ViewMode = 'grid' | 'list';
+
+const VIEW_STORAGE_KEY = 'blog-list-view';
+
+
   let { posts, limit, showControls = false }: Props = $props();
   let query = $state('');
   let selectedTag = $state('all');
-  let view = $state<'grid' | 'list'>('grid');
+  let view = $state<ViewMode>('grid');
 
   /**
    * tagsが未設定の記事でも一覧表示が停止しないように、
@@ -29,6 +34,14 @@
   const getPostTags = (post: Post): string[] => {
     return Array.isArray(post.tags) ? post.tags : [];
   };
+
+// 表示モードを変更し、ブラウザのlocalStorageへ保存します。	
+const changeView = (nextView: ViewMode) => {	
+view = nextView;	
+if (typeof window !== 'undefined') {	
+window.localStorage.setItem(VIEW_STORAGE_KEY, nextView);	
+}	
+};
 
   const tags = $derived(
     [...new Set(posts.flatMap((post) => getPostTags(post)))].sort(),
@@ -62,6 +75,18 @@
     }).format(new Date(date));
 
   onMount(() => {
+    /**
+     * ブラウザに保存されている表示モードを復元します。	
+* 想定外の値が保存されている場合はgrid表示を維持します。	
+*/	
+const savedView = window.localStorage.getItem(VIEW_STORAGE_KEY);	
+if (savedView === 'grid' || savedView === 'list') {	
+view = savedView;	
+}	
+/**	
+* 記事一覧ページ以外では、	
+* タグ絞り込み用の初期化処理を行いません。	
+*/
     if (!showControls) return;
 
     const tag = new URLSearchParams(window.location.search).get('tag');
@@ -84,11 +109,11 @@
     </label>
 
     <div class="view-switch" aria-label="表示方法">
-      <button type="button" class:active={view === 'grid'} onclick={() => (view = 'grid')} aria-pressed={view === 'grid'}>
+      <button type="button" class:active={view === 'grid'} onclick={() => changeView('grid')} aria-pressed={view === 'grid'}>
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z" fill="none" stroke="currentColor" stroke-width="1.7" /></svg>
         <span>グリッド</span>
       </button>
-      <button type="button" class:active={view === 'list'} onclick={() => (view = 'list')} aria-pressed={view === 'list'}>
+      <button type="button" class:active={view === 'list'} onclick={() => changeView('list')} aria-pressed={view === 'list'}>
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" /></svg>
         <span>リスト</span>
       </button>
