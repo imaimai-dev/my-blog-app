@@ -43,6 +43,22 @@ window.localStorage.setItem(VIEW_STORAGE_KEY, nextView);
 }	
 };
 
+/**	
+* 検索キーワードとタグの絞り込みを初期状態へ戻します。	
+*/	
+const resetFilters = () => {	
+query = '';	
+selectedTag = 'all';	
+  };
+
+/**	
+* 検索またはタグ絞り込みが行われているか判定します。	
+* 初期状態ではリセットボタンを表示しません。	
+*/	
+const hasActiveFilters = $derived(	
+query.trim().length > 0 || selectedTag !== 'all',	
+);
+
   const tags = $derived(
     [...new Set(posts.flatMap((post) => getPostTags(post)))].sort(),
   );
@@ -120,11 +136,32 @@ view = savedView;
     </div>
   </div>
 
+<div class="filter-toolbar">
   <div class="tag-filter" aria-label="タグで絞り込む">
     <button type="button" class:active={selectedTag === 'all'} onclick={() => (selectedTag = 'all')}>すべて</button>
     {#each tags as tag}
       <button type="button" class:active={selectedTag === tag} onclick={() => (selectedTag = tag)}>#{tag}</button>
     {/each}
+  </div>
+  {#if hasActiveFilters}	
+<button	
+type="button"	
+class="reset-filter"	
+onclick={resetFilters}	
+>	
+<svg viewBox="0 0 24 24" aria-hidden="true">	
+<path	
+d="M5 7h14M9 7V5h6v2M8 10v7M12 10v7M16 10v7M7 7l1 13h8l1-13"	
+fill="none"	
+stroke="currentColor"	
+stroke-width="1.6"	
+stroke-linecap="round"	
+stroke-linejoin="round"	
+/>	
+</svg>	
+<span>絞り込みをクリア</span>	
+</button>	
+{/if}
   </div>
 {/if}
 
@@ -154,6 +191,15 @@ view = savedView;
       <span>🔎</span>
       <strong>該当する記事がありません</strong>
       <p>検索語かタグを変えてみてください。</p>
+      {#if hasActiveFilters}	
+<button	
+type="button"	
+class="empty-reset"	
+onclick={resetFilters}	
+>	
+絞り込みをクリア	
+</button>	
+{/if}
     </div>
   {/each}
 </div>
@@ -245,11 +291,20 @@ view = savedView;
     height: 16px;
   }
 
+  .filter-toolbar {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+
+
   .tag-filter {
     display: flex;
+    min-width: 0;
     overflow-x: auto;
     gap: 0.5rem;
-    margin-bottom: 2rem;
     padding-bottom: 0.35rem;
     scrollbar-width: thin;
   }
@@ -271,6 +326,31 @@ view = savedView;
     background: var(--brand-soft);
     color: var(--brand-strong);
   }
+
+  .reset-filter {	
+display: inline-flex;	
+min-height: 36px;	
+flex: 0 0 auto;	
+align-items: center;	
+gap: 0.4rem;	
+border: 1px solid var(--line);	
+border-radius: 999px;	
+background: transparent;	
+padding: 0.4rem 0.72rem;	
+color: var(--muted);	
+cursor: pointer;	
+font-size: 0.75rem;	
+font-weight: 600;	
+}	
+.reset-filter:hover {	
+border-color: color-mix(in srgb, var(--brand) 45%, var(--line));	
+background: var(--brand-soft);	
+color: var(--brand-strong);	
+}	
+.reset-filter svg {	
+width: 15px;	
+height: 15px;	
+}
 
   .post-grid {
     display: grid;
@@ -404,6 +484,22 @@ view = savedView;
   .empty-state strong { margin-top: 0.5rem; color: var(--text); }
   .empty-state p { margin-top: 0.2rem; }
 
+  .empty-reset {	
+margin-top: 1rem;	
+border: 1px solid var(--line);	
+border-radius: 999px;	
+background: var(--surface);	
+padding: 0.55rem 0.9rem;	
+color: var(--brand);	
+cursor: pointer;	
+font-size: 0.78rem;	
+font-weight: 700;	
+  }	
+.empty-reset:hover {	
+border-color: color-mix(in srgb, var(--brand) 50%, var(--line));	
+background: var(--brand-soft);	
+}
+
   @media (max-width: 900px) {
     .post-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   }
@@ -411,6 +507,14 @@ view = savedView;
   @media (max-width: 640px) {
     .explorer-controls { align-items: stretch; flex-direction: column; }
     .view-switch { align-self: flex-end; }
+    .filter-toolbar {	
+align-items: stretch;	
+flex-direction: column;	
+gap: 0.75rem;	
+}	
+.reset-filter {	
+align-self: flex-end;	
+}
     .post-grid { grid-template-columns: 1fr; }
     .post-list .post-card { grid-template-columns: 1fr; }
     .post-list .thumbnail {
