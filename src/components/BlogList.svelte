@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
 
+
   type Post = {
     id: string;
     title: string;
@@ -11,21 +12,25 @@
     ogImage: string;
   };
 
+
   type Props = {
     posts: Post[];
     limit?: number;
     showControls?: boolean;
   };
 
-type ViewMode = 'grid' | 'list';
 
-const VIEW_STORAGE_KEY = 'blog-list-view';
+  type ViewMode = 'grid' | 'list';
+
+
+  const VIEW_STORAGE_KEY = 'blog-list-view';
 
 
   let { posts, limit, showControls = false }: Props = $props();
   let query = $state('');
   let selectedTag = $state('all');
   let view = $state<ViewMode>('grid');
+
 
   /**
    * tagsが未設定の記事でも一覧表示が停止しないように、
@@ -35,39 +40,57 @@ const VIEW_STORAGE_KEY = 'blog-list-view';
     return Array.isArray(post.tags) ? post.tags : [];
   };
 
-// 表示モードを変更し、ブラウザのlocalStorageへ保存します。	
-const changeView = (nextView: ViewMode) => {	
-view = nextView;	
-if (typeof window !== 'undefined') {	
-window.localStorage.setItem(VIEW_STORAGE_KEY, nextView);	
-}	
-};
 
-/**	
-* 検索キーワードとタグの絞り込みを初期状態へ戻します。	
-*/	
-const resetFilters = () => {	
-query = '';	
-selectedTag = 'all';	
+  /**
+   * 表示モードを変更し、
+   * ブラウザのlocalStorageへ保存します。
+   */
+  const changeView = (nextView: ViewMode) => {
+    view = nextView;
+
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem(VIEW_STORAGE_KEY, nextView);
+    }
   };
 
-/**	
-* 検索またはタグ絞り込みが行われているか判定します。	
-* 初期状態ではリセットボタンを表示しません。	
-*/	
-const hasActiveFilters = $derived(	
-query.trim().length > 0 || selectedTag !== 'all',	
-);
 
+  /**
+   * 検索キーワードとタグの絞り込みを初期状態へ戻します。
+   */
+  const resetFilters = () => {
+    query = '';
+    selectedTag = 'all';
+  };
+
+
+  /**
+   * 検索またはタグ絞り込みが行われているか判定します。
+   * 初期状態ではリセットボタンを表示しません。
+   */
+  const hasActiveFilters = $derived(
+    query.trim().length > 0 || selectedTag !== 'all',
+  );
+
+
+  /**
+   * 記事に設定されているタグを重複なしで取得し、
+   * タグ絞り込み用の一覧を生成します。
+   */
   const tags = $derived(
     [...new Set(posts.flatMap((post) => getPostTags(post)))].sort(),
   );
 
+
+  /**
+   * 検索キーワードと選択タグの両方を使って記事を絞り込みます。
+   * limitが設定されている場合は指定件数までに制限します。
+   */
   const filteredPosts = $derived(
     posts
       .filter((post) => {
         const keyword = query.trim().toLowerCase();
         const postTags = getPostTags(post);
+
 
         const matchesQuery =
           keyword.length === 0 ||
@@ -75,14 +98,20 @@ query.trim().length > 0 || selectedTag !== 'all',
           post.description.toLowerCase().includes(keyword) ||
           postTags.some((tag) => tag.toLowerCase().includes(keyword));
 
+
         const matchesTag =
           selectedTag === 'all' || postTags.includes(selectedTag);
+
 
         return matchesQuery && matchesTag;
       })
       .slice(0, limit ?? posts.length),
   );
 
+
+  /**
+   * 公開日を日本語環境向けの年月日表記へ変換します。
+   */
   const formatDate = (date: string) =>
     new Intl.DateTimeFormat('ja-JP', {
       year: 'numeric',
@@ -90,22 +119,32 @@ query.trim().length > 0 || selectedTag !== 'all',
       day: '2-digit',
     }).format(new Date(date));
 
+
   onMount(() => {
     /**
-     * ブラウザに保存されている表示モードを復元します。	
-* 想定外の値が保存されている場合はgrid表示を維持します。	
-*/	
-const savedView = window.localStorage.getItem(VIEW_STORAGE_KEY);	
-if (savedView === 'grid' || savedView === 'list') {	
-view = savedView;	
-}	
-/**	
-* 記事一覧ページ以外では、	
-* タグ絞り込み用の初期化処理を行いません。	
-*/
+     * ブラウザに保存されている表示モードを復元します。
+     * 想定外の値が保存されている場合はgrid表示を維持します。
+     */
+    const savedView = window.localStorage.getItem(VIEW_STORAGE_KEY);
+
+    if (savedView === 'grid' || savedView === 'list') {
+      view = savedView;
+    }
+
+
+    /**
+     * 記事一覧ページ以外では、
+     * タグ絞り込み用の初期化処理を行いません。
+     */
     if (!showControls) return;
 
+
+    /**
+     * URLのtagパラメータに有効なタグが指定されている場合は、
+     * そのタグを初期選択状態にします。
+     */
     const tag = new URLSearchParams(window.location.search).get('tag');
+
 
     if (tag && tags.includes(tag)) {
       selectedTag = tag;
@@ -113,72 +152,174 @@ view = savedView;
   });
 </script>
 
+
 {#if showControls}
   <div class="explorer-controls">
     <label class="search-box">
       <span class="sr-only">記事を検索</span>
+
       <svg viewBox="0 0 24 24" aria-hidden="true">
-        <circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="1.8" />
-        <path d="m16 16 4 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+        <circle
+          cx="11"
+          cy="11"
+          r="6.5"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+        />
+
+        <path
+          d="m16 16 4 4"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+        />
       </svg>
-      <input bind:value={query} type="search" placeholder="タイトル・本文・タグから検索" />
+
+      <input
+        bind:value={query}
+        type="search"
+        placeholder="タイトル・本文・タグから検索"
+      />
     </label>
 
+
     <div class="view-switch" aria-label="表示方法">
-      <button type="button" class:active={view === 'grid'} onclick={() => changeView('grid')} aria-pressed={view === 'grid'}>
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z" fill="none" stroke="currentColor" stroke-width="1.7" /></svg>
+      <button
+        type="button"
+        class:active={view === 'grid'}
+        onclick={() => changeView('grid')}
+        aria-pressed={view === 'grid'}
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path
+            d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.7"
+          />
+        </svg>
+
         <span>グリッド</span>
       </button>
-      <button type="button" class:active={view === 'list'} onclick={() => changeView('list')} aria-pressed={view === 'list'}>
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" /></svg>
+
+      <button
+        type="button"
+        class:active={view === 'list'}
+        onclick={() => changeView('list')}
+        aria-pressed={view === 'list'}
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path
+            d="M4 6h16M4 12h16M4 18h16"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            stroke-linecap="round"
+          />
+        </svg>
+
         <span>リスト</span>
       </button>
     </div>
   </div>
 
-<div class="filter-toolbar">
-  <div class="tag-filter" aria-label="タグで絞り込む">
-    <button type="button" class:active={selectedTag === 'all'} onclick={() => (selectedTag = 'all')}>すべて</button>
-    {#each tags as tag}
-      <button type="button" class:active={selectedTag === tag} onclick={() => (selectedTag = tag)}>#{tag}</button>
-    {/each}
+
+  <div class="filter-toolbar">
+    <div class="tag-filter" aria-label="タグで絞り込む">
+      <button
+        type="button"
+        class:active={selectedTag === 'all'}
+        onclick={() => (selectedTag = 'all')}
+      >
+        すべて
+      </button>
+
+      {#each tags as tag}
+        <button
+          type="button"
+          class:active={selectedTag === tag}
+          onclick={() => (selectedTag = tag)}
+        >
+          #{tag}
+        </button>
+      {/each}
+    </div>
+
+
+    {#if hasActiveFilters}
+      <button
+        type="button"
+        class="reset-filter"
+        onclick={resetFilters}
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path
+            d="M5 7h14M9 7V5h6v2M8 10v7M12 10v7M16 10v7M7 7l1 13h8l1-13"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.6"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        </svg>
+
+        <span>絞り込みをクリア</span>
+      </button>
+    {/if}
   </div>
-  {#if hasActiveFilters}	
-<button	
-type="button"	
-class="reset-filter"	
-onclick={resetFilters}	
->	
-<svg viewBox="0 0 24 24" aria-hidden="true">	
-<path	
-d="M5 7h14M9 7V5h6v2M8 10v7M12 10v7M16 10v7M7 7l1 13h8l1-13"	
-fill="none"	
-stroke="currentColor"	
-stroke-width="1.6"	
-stroke-linecap="round"	
-stroke-linejoin="round"	
-/>	
-</svg>	
-<span>絞り込みをクリア</span>	
-</button>	
-{/if}
+
+
+  <div
+    class="result-summary"
+    aria-live="polite"
+    aria-atomic="true"
+  >
+    {#if hasActiveFilters}
+      <span>絞り込み結果</span>
+    {:else}
+      <span>記事数</span>
+    {/if}
+
+    <strong>{filteredPosts.length}</strong>
+    <span>件</span>
   </div>
 {/if}
 
-<div class:post-grid={view === 'grid'} class:post-list={view === 'list'}>
+
+<div
+  class:post-grid={view === 'grid'}
+  class:post-list={view === 'list'}
+>
   {#each filteredPosts as post (post.id)}
     <a class="post-card" href={`/blog/${post.id}/`}>
       <div class="thumbnail">
-        <img src={post.ogImage} alt="" loading="lazy" decoding="async" />
+        <img
+          src={post.ogImage}
+          alt=""
+          loading="lazy"
+          decoding="async"
+        />
       </div>
+
       <div class="card-body">
         <div class="meta-row">
-          <time datetime={post.pubDate}>{formatDate(post.pubDate)}</time>
+          <time datetime={post.pubDate}>
+            {formatDate(post.pubDate)}
+          </time>
+
           <span aria-hidden="true">·</span>
-          <span>{Math.max(1, Math.ceil(post.description.length / 120))} min read</span>
+
+          <span>
+            {Math.max(1, Math.ceil(post.description.length / 120))} min read
+          </span>
         </div>
+
         <h2>{post.title}</h2>
+
         <p>{post.description}</p>
+
         <div class="tag-row">
           {#each getPostTags(post).slice(0, 3) as tag}
             <span>#{tag}</span>
@@ -189,20 +330,24 @@ stroke-linejoin="round"
   {:else}
     <div class="empty-state">
       <span>🔎</span>
+
       <strong>該当する記事がありません</strong>
+
       <p>検索語かタグを変えてみてください。</p>
-      {#if hasActiveFilters}	
-<button	
-type="button"	
-class="empty-reset"	
-onclick={resetFilters}	
->	
-絞り込みをクリア	
-</button>	
-{/if}
+
+      {#if hasActiveFilters}
+        <button
+          type="button"
+          class="empty-reset"
+          onclick={resetFilters}
+        >
+          絞り込みをクリア
+        </button>
+      {/if}
     </div>
   {/each}
 </div>
+
 
 <style>
   .sr-only {
@@ -214,6 +359,7 @@ onclick={resetFilters}
     white-space: nowrap;
   }
 
+
   .explorer-controls {
     display: flex;
     align-items: center;
@@ -221,6 +367,7 @@ onclick={resetFilters}
     gap: 1rem;
     margin-bottom: 1rem;
   }
+
 
   .search-box {
     display: flex;
@@ -235,16 +382,19 @@ onclick={resetFilters}
     color: var(--muted);
   }
 
+
   .search-box:focus-within {
     border-color: var(--brand);
     box-shadow: 0 0 0 4px color-mix(in srgb, var(--brand) 12%, transparent);
   }
+
 
   .search-box svg {
     width: 19px;
     height: 19px;
     flex: 0 0 auto;
   }
+
 
   .search-box input {
     width: 100%;
@@ -255,7 +405,11 @@ onclick={resetFilters}
     font-size: 0.9rem;
   }
 
-  .search-box input::placeholder { color: var(--subtle); }
+
+  .search-box input::placeholder {
+    color: var(--subtle);
+  }
+
 
   .view-switch {
     display: inline-flex;
@@ -265,6 +419,7 @@ onclick={resetFilters}
     background: var(--surface);
     padding: 0.25rem;
   }
+
 
   .view-switch button {
     display: inline-flex;
@@ -281,22 +436,25 @@ onclick={resetFilters}
     font-weight: 700;
   }
 
+
   .view-switch button.active {
     background: var(--text);
     color: var(--page);
   }
+
 
   .view-switch svg {
     width: 16px;
     height: 16px;
   }
 
+
   .filter-toolbar {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
     gap: 1rem;
-    margin-bottom: 2rem;
+    margin-bottom: 1rem;
   }
 
 
@@ -309,6 +467,7 @@ onclick={resetFilters}
     scrollbar-width: thin;
   }
 
+
   .tag-filter button {
     flex: 0 0 auto;
     border: 1px solid var(--line);
@@ -320,6 +479,7 @@ onclick={resetFilters}
     font-size: 0.78rem;
   }
 
+
   .tag-filter button:hover,
   .tag-filter button.active {
     border-color: color-mix(in srgb, var(--brand) 55%, var(--line));
@@ -327,30 +487,54 @@ onclick={resetFilters}
     color: var(--brand-strong);
   }
 
-  .reset-filter {	
-display: inline-flex;	
-min-height: 36px;	
-flex: 0 0 auto;	
-align-items: center;	
-gap: 0.4rem;	
-border: 1px solid var(--line);	
-border-radius: 999px;	
-background: transparent;	
-padding: 0.4rem 0.72rem;	
-color: var(--muted);	
-cursor: pointer;	
-font-size: 0.75rem;	
-font-weight: 600;	
-}	
-.reset-filter:hover {	
-border-color: color-mix(in srgb, var(--brand) 45%, var(--line));	
-background: var(--brand-soft);	
-color: var(--brand-strong);	
-}	
-.reset-filter svg {	
-width: 15px;	
-height: 15px;	
-}
+
+  .reset-filter {
+    display: inline-flex;
+    min-height: 36px;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: 0.4rem;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: transparent;
+    padding: 0.4rem 0.72rem;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+
+
+  .reset-filter:hover {
+    border-color: color-mix(in srgb, var(--brand) 45%, var(--line));
+    background: var(--brand-soft);
+    color: var(--brand-strong);
+  }
+
+
+  .reset-filter svg {
+    width: 15px;
+    height: 15px;
+  }
+
+
+  .result-summary {
+    display: flex;
+    align-items: baseline;
+    gap: 0.28rem;
+    margin-bottom: 1.25rem;
+    color: var(--muted);
+    font-size: 0.78rem;
+  }
+
+
+  .result-summary strong {
+    color: var(--text);
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 1rem;
+    font-weight: 700;
+  }
+
 
   .post-grid {
     display: grid;
@@ -358,10 +542,12 @@ height: 15px;
     gap: 1.35rem;
   }
 
+
   .post-list {
     display: grid;
     gap: 1rem;
   }
+
 
   .post-card {
     overflow: hidden;
@@ -369,14 +555,19 @@ height: 15px;
     border-radius: 23px;
     background: var(--surface);
     box-shadow: 0 8px 24px rgb(17 24 39 / 0.045);
-    transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+    transition:
+      transform 180ms ease,
+      border-color 180ms ease,
+      box-shadow 180ms ease;
   }
+
 
   .post-card:hover {
     border-color: color-mix(in srgb, var(--brand) 40%, var(--line));
     box-shadow: var(--shadow-card);
     transform: translateY(-5px);
   }
+
 
   .thumbnail {
     position: relative;
@@ -386,6 +577,7 @@ height: 15px;
     background: var(--brand-soft);
   }
 
+
   .thumbnail img {
     width: 100%;
     height: 100%;
@@ -393,11 +585,16 @@ height: 15px;
     transition: transform 260ms ease;
   }
 
-  .post-card:hover .thumbnail img { transform: scale(1.025); }
+
+  .post-card:hover .thumbnail img {
+    transform: scale(1.025);
+  }
+
 
   .card-body {
     padding: 1.15rem 1.2rem 1.25rem;
   }
+
 
   .meta-row {
     display: flex;
@@ -407,6 +604,7 @@ height: 15px;
     font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
     font-size: 0.67rem;
   }
+
 
   h2 {
     display: -webkit-box;
@@ -422,6 +620,7 @@ height: 15px;
     line-clamp: 2;
   }
 
+
   p {
     display: -webkit-box;
     overflow: hidden;
@@ -434,6 +633,7 @@ height: 15px;
     line-clamp: 2;
   }
 
+
   .tag-row {
     display: flex;
     flex-wrap: wrap;
@@ -444,10 +644,12 @@ height: 15px;
     font-weight: 500;
   }
 
+
   .post-list .post-card {
     display: grid;
     grid-template-columns: minmax(210px, 31%) 1fr;
   }
+
 
   .post-list .thumbnail {
     height: 100%;
@@ -457,6 +659,7 @@ height: 15px;
     border-bottom: 0;
   }
 
+
   .post-list .card-body {
     display: flex;
     flex-direction: column;
@@ -464,9 +667,11 @@ height: 15px;
     padding: 1.35rem 1.55rem;
   }
 
+
   .post-list h2 {
     font-size: 1.2rem;
   }
+
 
   .empty-state {
     grid-column: 1 / -1;
@@ -480,43 +685,83 @@ height: 15px;
     text-align: center;
   }
 
-  .empty-state span { font-size: 2rem; }
-  .empty-state strong { margin-top: 0.5rem; color: var(--text); }
-  .empty-state p { margin-top: 0.2rem; }
 
-  .empty-reset {	
-margin-top: 1rem;	
-border: 1px solid var(--line);	
-border-radius: 999px;	
-background: var(--surface);	
-padding: 0.55rem 0.9rem;	
-color: var(--brand);	
-cursor: pointer;	
-font-size: 0.78rem;	
-font-weight: 700;	
-  }	
-.empty-reset:hover {	
-border-color: color-mix(in srgb, var(--brand) 50%, var(--line));	
-background: var(--brand-soft);	
-}
-
-  @media (max-width: 900px) {
-    .post-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .empty-state span {
+    font-size: 2rem;
   }
 
+
+  .empty-state strong {
+    margin-top: 0.5rem;
+    color: var(--text);
+  }
+
+
+  .empty-state p {
+    margin-top: 0.2rem;
+  }
+
+
+  .empty-reset {
+    margin-top: 1rem;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: var(--surface);
+    padding: 0.55rem 0.9rem;
+    color: var(--brand);
+    cursor: pointer;
+    font-size: 0.78rem;
+    font-weight: 700;
+  }
+
+
+  .empty-reset:hover {
+    border-color: color-mix(in srgb, var(--brand) 50%, var(--line));
+    background: var(--brand-soft);
+  }
+
+
+  @media (max-width: 900px) {
+    .post-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+
   @media (max-width: 640px) {
-    .explorer-controls { align-items: stretch; flex-direction: column; }
-    .view-switch { align-self: flex-end; }
-    .filter-toolbar {	
-align-items: stretch;	
-flex-direction: column;	
-gap: 0.75rem;	
-}	
-.reset-filter {	
-align-self: flex-end;	
-}
-    .post-grid { grid-template-columns: 1fr; }
-    .post-list .post-card { grid-template-columns: 1fr; }
+    .explorer-controls {
+      align-items: stretch;
+      flex-direction: column;
+    }
+
+
+    .view-switch {
+      align-self: flex-end;
+    }
+
+
+    .filter-toolbar {
+      align-items: stretch;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+
+    .reset-filter {
+      align-self: flex-end;
+    }
+
+
+    .post-grid {
+      grid-template-columns: 1fr;
+    }
+
+
+    .post-list .post-card {
+      grid-template-columns: 1fr;
+    }
+
+
     .post-list .thumbnail {
       min-height: auto;
       aspect-ratio: 1.92 / 1;
