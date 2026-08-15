@@ -55,11 +55,65 @@
 
 
   /**
+   * 選択したタグをURLのtagクエリパラメーターへ反映します。
+   *
+   * 「すべて」を選択した場合はtagパラメーターを削除します。
+   * それ以外のタグを選択した場合は ?tag=タグ名 の形式でURLへ保存します。
+   */
+  const syncTagToUrl = (tag: string) => {
+    if (typeof window === 'undefined') return;
+
+
+    const url = new URL(window.location.href);
+
+
+    if (tag === 'all') {
+      url.searchParams.delete('tag');
+    } else {
+      url.searchParams.set('tag', tag);
+    }
+
+
+    /**
+     * 同じURLを重複して履歴へ追加しないように、
+     * 現在のURLと異なる場合だけpushStateを実行します。
+     */
+    const nextUrl =
+      `${url.pathname}${url.search}${url.hash}`;
+
+    const currentUrl =
+      `${window.location.pathname}${window.location.search}${window.location.hash}`;
+
+
+    if (nextUrl !== currentUrl) {
+      window.history.pushState(
+        {},
+        '',
+        nextUrl,
+      );
+    }
+  };
+
+
+  /**
+   * タグの選択状態を変更し、
+   * URLのtagクエリパラメーターも同時に更新します。
+   */
+  const selectTag = (tag: string) => {
+    selectedTag = tag;
+    syncTagToUrl(tag);
+  };
+
+
+  /**
    * 検索キーワードとタグの絞り込みを初期状態へ戻します。
+   *
+   * タグを解除した際はURLからtagパラメーターも削除します。
    */
   const resetFilters = () => {
     query = '';
     selectedTag = 'all';
+    syncTagToUrl('all');
   };
 
 
@@ -127,6 +181,7 @@
      */
     const savedView = window.localStorage.getItem(VIEW_STORAGE_KEY);
 
+
     if (savedView === 'grid' || savedView === 'list') {
       view = savedView;
     }
@@ -140,10 +195,11 @@
 
 
     /**
-     * URLのtagパラメータに有効なタグが指定されている場合は、
+     * URLのtagパラメーターに有効なタグが指定されている場合は、
      * そのタグを初期選択状態にします。
      */
-    const tag = new URLSearchParams(window.location.search).get('tag');
+    const tag =
+      new URLSearchParams(window.location.search).get('tag');
 
 
     if (tag && tags.includes(tag)) {
@@ -231,7 +287,7 @@
       <button
         type="button"
         class:active={selectedTag === 'all'}
-        onclick={() => (selectedTag = 'all')}
+        onclick={() => selectTag('all')}
       >
         すべて
       </button>
@@ -240,7 +296,7 @@
         <button
           type="button"
           class:active={selectedTag === tag}
-          onclick={() => (selectedTag = tag)}
+          onclick={() => selectTag(tag)}
         >
           #{tag}
         </button>
@@ -555,6 +611,7 @@
     border-radius: 23px;
     background: var(--surface);
     box-shadow: 0 8px 24px rgb(17 24 39 / 0.045);
+
     transition:
       transform 180ms ease,
       border-color 180ms ease,
