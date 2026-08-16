@@ -55,10 +55,38 @@
 
 
   /**
+   * 現在のURLからtagクエリパラメーターを取得し、
+   * 有効なタグであれば選択状態へ反映します。
+   *
+   * tagが存在しない場合や、
+   * 記事一覧に存在しないタグが指定されている場合は
+   * 「すべて」を選択状態にします。
+   */
+  const syncTagFromUrl = () => {
+    if (typeof window === 'undefined') return;
+
+
+    const tag = new URLSearchParams(
+      window.location.search,
+    ).get('tag');
+
+
+    if (tag && tags.includes(tag)) {
+      selectedTag = tag;
+      return;
+    }
+
+
+    selectedTag = 'all';
+  };
+
+
+  /**
    * 選択したタグをURLのtagクエリパラメーターへ反映します。
    *
    * 「すべて」を選択した場合はtagパラメーターを削除します。
-   * それ以外のタグを選択した場合は ?tag=タグ名 の形式でURLへ保存します。
+   * それ以外のタグを選択した場合は
+   * ?tag=タグ名 の形式でURLへ保存します。
    */
   const syncTagToUrl = (tag: string) => {
     if (typeof window === 'undefined') return;
@@ -150,11 +178,14 @@
           keyword.length === 0 ||
           post.title.toLowerCase().includes(keyword) ||
           post.description.toLowerCase().includes(keyword) ||
-          postTags.some((tag) => tag.toLowerCase().includes(keyword));
+          postTags.some((tag) =>
+            tag.toLowerCase().includes(keyword)
+          );
 
 
         const matchesTag =
-          selectedTag === 'all' || postTags.includes(selectedTag);
+          selectedTag === 'all' ||
+          postTags.includes(selectedTag);
 
 
         return matchesQuery && matchesTag;
@@ -179,7 +210,8 @@
      * ブラウザに保存されている表示モードを復元します。
      * 想定外の値が保存されている場合はgrid表示を維持します。
      */
-    const savedView = window.localStorage.getItem(VIEW_STORAGE_KEY);
+    const savedView =
+      window.localStorage.getItem(VIEW_STORAGE_KEY);
 
 
     if (savedView === 'grid' || savedView === 'list') {
@@ -195,16 +227,36 @@
 
 
     /**
-     * URLのtagパラメーターに有効なタグが指定されている場合は、
-     * そのタグを初期選択状態にします。
+     * 初回表示時のURLからタグ選択状態を復元します。
      */
-    const tag =
-      new URLSearchParams(window.location.search).get('tag');
+    syncTagFromUrl();
 
 
-    if (tag && tags.includes(tag)) {
-      selectedTag = tag;
-    }
+    /**
+     * ブラウザの「戻る」「進む」によって履歴が移動した際、
+     * 現在のURLに合わせてタグ選択状態を更新します。
+     */
+    const handlePopState = () => {
+      syncTagFromUrl();
+    };
+
+
+    window.addEventListener(
+      'popstate',
+      handlePopState,
+    );
+
+
+    /**
+     * コンポーネントが破棄される際に、
+     * 登録したイベントリスナーを解除します。
+     */
+    return () => {
+      window.removeEventListener(
+        'popstate',
+        handlePopState,
+      );
+    };
   });
 </script>
 
@@ -349,7 +401,10 @@
   class:post-list={view === 'list'}
 >
   {#each filteredPosts as post (post.id)}
-    <a class="post-card" href={`/blog/${post.id}/`}>
+    <a
+      class="post-card"
+      href={`/blog/${post.id}/`}
+    >
       <div class="thumbnail">
         <img
           src={post.ogImage}
@@ -368,7 +423,10 @@
           <span aria-hidden="true">·</span>
 
           <span>
-            {Math.max(1, Math.ceil(post.description.length / 120))} min read
+            {Math.max(
+              1,
+              Math.ceil(post.description.length / 120),
+            )} min read
           </span>
         </div>
 
@@ -441,7 +499,9 @@
 
   .search-box:focus-within {
     border-color: var(--brand);
-    box-shadow: 0 0 0 4px color-mix(in srgb, var(--brand) 12%, transparent);
+    box-shadow:
+      0 0 0 4px
+      color-mix(in srgb, var(--brand) 12%, transparent);
   }
 
 
@@ -538,7 +598,12 @@
 
   .tag-filter button:hover,
   .tag-filter button.active {
-    border-color: color-mix(in srgb, var(--brand) 55%, var(--line));
+    border-color:
+      color-mix(
+        in srgb,
+        var(--brand) 55%,
+        var(--line)
+      );
     background: var(--brand-soft);
     color: var(--brand-strong);
   }
@@ -562,7 +627,12 @@
 
 
   .reset-filter:hover {
-    border-color: color-mix(in srgb, var(--brand) 45%, var(--line));
+    border-color:
+      color-mix(
+        in srgb,
+        var(--brand) 45%,
+        var(--line)
+      );
     background: var(--brand-soft);
     color: var(--brand-strong);
   }
@@ -586,7 +656,11 @@
 
   .result-summary strong {
     color: var(--text);
-    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-family:
+      ui-monospace,
+      SFMono-Regular,
+      Menlo,
+      monospace;
     font-size: 1rem;
     font-weight: 700;
   }
@@ -594,7 +668,8 @@
 
   .post-grid {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns:
+      repeat(3, minmax(0, 1fr));
     gap: 1.35rem;
   }
 
@@ -610,7 +685,8 @@
     border: 1px solid var(--line);
     border-radius: 23px;
     background: var(--surface);
-    box-shadow: 0 8px 24px rgb(17 24 39 / 0.045);
+    box-shadow:
+      0 8px 24px rgb(17 24 39 / 0.045);
 
     transition:
       transform 180ms ease,
@@ -620,7 +696,12 @@
 
 
   .post-card:hover {
-    border-color: color-mix(in srgb, var(--brand) 40%, var(--line));
+    border-color:
+      color-mix(
+        in srgb,
+        var(--brand) 40%,
+        var(--line)
+      );
     box-shadow: var(--shadow-card);
     transform: translateY(-5px);
   }
@@ -658,7 +739,11 @@
     align-items: center;
     gap: 0.35rem;
     color: var(--subtle);
-    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-family:
+      ui-monospace,
+      SFMono-Regular,
+      Menlo,
+      monospace;
     font-size: 0.67rem;
   }
 
@@ -704,7 +789,8 @@
 
   .post-list .post-card {
     display: grid;
-    grid-template-columns: minmax(210px, 31%) 1fr;
+    grid-template-columns:
+      minmax(210px, 31%) 1fr;
   }
 
 
@@ -773,14 +859,20 @@
 
 
   .empty-reset:hover {
-    border-color: color-mix(in srgb, var(--brand) 50%, var(--line));
+    border-color:
+      color-mix(
+        in srgb,
+        var(--brand) 50%,
+        var(--line)
+      );
     background: var(--brand-soft);
   }
 
 
   @media (max-width: 900px) {
     .post-grid {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-columns:
+        repeat(2, minmax(0, 1fr));
     }
   }
 
