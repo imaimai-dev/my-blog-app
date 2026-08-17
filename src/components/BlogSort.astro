@@ -1,0 +1,52 @@
+<div
+  x-data="{ sortOrder: 'newest' }"
+  class="blog-sort"
+>
+  <label class="blog-sort-label">
+    <span>並び替え</span>
+
+    <select
+      x-model="sortOrder"
+      @change="$dispatch('blog-sort-change', sortOrder)"
+      class="blog-sort-select"
+    >
+      <option value="newest">新しい順</option>
+      <option value="oldest">古い順</option>
+    </select>
+  </label>
+</div>
+
+
+<style>
+  .blog-sort {
+    display: flex;
+    justify-content: flex-end;
+    padding-bottom: 1rem;
+  }
+
+
+  .blog-sort-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--muted);
+    font-size: 0.82rem;
+    font-weight: 500;
+  }
+
+
+  .blog-sort-select {
+    min-height: 38px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: var(--surface);
+    padding: 0.25rem 0.75rem;
+    color: var(--text);
+    cursor: pointer;
+  }
+
+
+  .blog-sort-select:focus-visible {
+    border-color: var(--brand);
+  }
+</style>

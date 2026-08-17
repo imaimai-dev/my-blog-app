@@ -18,6 +18,7 @@ interface Props {
 ---
 
 <!doctype html>
+
 <html lang="ja">
   <head>
     <BaseHead {...Astro.props} />
@@ -31,5 +32,11 @@ interface Props {
     </main>
 
     <Footer />
+
+    <!--
+      Alpine.jsの初期化処理を読み込みます。
+      BaseLayoutから読み込むことでサイト全体でAlpineを利用できます。
+    -->
+    <script src="../scripts/alpine.ts"></script>
   </body>
 </html>

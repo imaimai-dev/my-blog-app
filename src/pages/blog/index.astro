@@ -1,33 +1,81 @@
 ---
 import { getCollection } from 'astro:content';
+
 import BlogList from '../../components/BlogList.svelte';
+import BlogSort from '../../components/BlogSort.astro';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { sortPosts, toPostCard } from '../../utils/posts';
 
-const posts = sortPosts(await getCollection('blog', ({ data }) => !data.draft));
+
+/**
+ * draftではない記事を取得し、
+ * 初期表示では新しい順に並べます。
+ */
+const posts = sortPosts(
+  await getCollection(
+    'blog',
+    ({ data }) => !data.draft,
+  ),
+);
+
+
+/**
+ * Content Collectionsの記事データを
+ * BlogListへ渡す形式へ変換します。
+ */
 const postCards = posts.map(toPostCard);
 ---
 
-<BaseLayout title="Blog" description="Web開発、クラウド、DevOpsの学習記事一覧です。">
+<BaseLayout
+  title="Blog"
+  description="Web開発、クラウド、DevOpsの学習記事一覧です。"
+>
   <section class="blog-page section-shell">
     <div class="site-container">
       <header class="page-header">
-        <p class="section-kicker">All articles</p>
+        <p class="section-kicker">
+          All articles
+        </p>
+
         <h1>Blog</h1>
-        <p>Web開発とクラウド技術に関する、試行錯誤の記録を探せます。</p>
+
+        <p>
+          Web開発とクラウド技術に関する、試行錯誤の記録を探せます。
+        </p>
       </header>
-      <BlogList posts={postCards} showControls client:load />
+
+
+      <!--
+        Alpine.jsで記事の並び順を操作します。
+        選択結果はCustomEventとしてBlogListへ通知します。
+      -->
+      <BlogSort />
+
+
+      <!--
+        Svelte側で検索・タグ絞り込み・並び替えを行います。
+      -->
+      <BlogList
+        posts={postCards}
+        showControls
+        client:load
+      />
     </div>
   </section>
 </BaseLayout>
 
+
 <style>
-  .blog-page { padding-top: clamp(3.8rem, 8vw, 6.8rem); }
+  .blog-page {
+    padding-top: clamp(3.8rem, 8vw, 6.8rem);
+  }
+
 
   .page-header {
     max-width: 700px;
     margin-bottom: clamp(2.5rem, 6vw, 4.5rem);
   }
+
 
   h1 {
     margin: 0;
@@ -37,6 +85,7 @@ const postCards = posts.map(toPostCard);
     letter-spacing: -0.075em;
     line-height: 1;
   }
+
 
   .page-header > p:last-child {
     margin: 1rem 0 0;
