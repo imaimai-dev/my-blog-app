@@ -10,14 +10,22 @@
       @change="$dispatch('blog-sort-change', sortOrder)"
       class="blog-sort-select"
     >
-      <option value="newest">新しい順</option>
-      <option value="oldest">古い順</option>
+      <option value="newest">
+        新しい順
+      </option>
+
+      <option value="oldest">
+        古い順
+      </option>
     </select>
   </label>
 </div>
 
 
 <style>
+  /**
+   * 並び替えUI全体を記事一覧の右側へ配置します。
+   */
   .blog-sort {
     display: flex;
     justify-content: flex-end;
@@ -25,28 +33,73 @@
   }
 
 
+  /**
+   * 「並び替え」のラベルとselectを横並びにします。
+   *
+   * グリッド・リスト切替ボタンと同じ文字サイズ・太さを使用します。
+   */
   .blog-sort-label {
     display: flex;
     align-items: center;
     gap: 0.5rem;
     color: var(--muted);
-    font-size: 0.82rem;
-    font-weight: 500;
+
+    font-family: inherit;
+    font-size: 0.78rem;
+    font-weight: 700;
   }
 
 
+  /**
+   * 並び替えselectの見た目を、
+   * グリッド・リスト切替UIに合わせます。
+   *
+   * var(--surface)を使用することで、
+   * ライト・ダークモード双方の背景色へ自動的に追従します。
+   */
   .blog-sort-select {
     min-height: 38px;
+
     border: 1px solid var(--line);
     border-radius: 999px;
-    background: var(--surface);
-    padding: 0.25rem 0.75rem;
-    color: var(--text);
+
+    background-color: var(--surface);
+    color: var(--muted);
+
+    padding: 0.25rem 0.8rem;
+
     cursor: pointer;
+
+    font-family: inherit;
+    font-size: 0.78rem;
+    font-weight: 700;
+    line-height: 1;
   }
 
 
+  /**
+   * マウスを乗せた際は、
+   * タグやその他の操作UIと同じようにブランドカラーを使用します。
+   */
+  .blog-sort-select:hover {
+    border-color:
+      color-mix(
+        in srgb,
+        var(--brand) 45%,
+        var(--line)
+      );
+
+    color: var(--text);
+  }
+
+
+  /**
+   * キーボード操作時にも、
+   * 現在フォーカスしているUIが分かるようにします。
+   */
   .blog-sort-select:focus-visible {
     border-color: var(--brand);
+    outline: 3px solid rgb(89 104 234 / 0.35);
+    outline-offset: 3px;
   }
 </style>
