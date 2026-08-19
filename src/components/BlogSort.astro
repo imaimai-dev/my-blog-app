@@ -1,13 +1,15 @@
 <div
-  x-data="{ sortOrder: 'newest' }"
+  x-data="blogSort"
   class="blog-sort"
 >
   <label class="blog-sort-label">
-    <span>並び替え</span>
+    <span>
+      並び替え
+    </span>
 
     <select
       x-model="sortOrder"
-      @change="$dispatch('blog-sort-change', sortOrder)"
+      @change="changeSort"
       class="blog-sort-select"
     >
       <option value="newest">
@@ -36,7 +38,8 @@
   /**
    * 「並び替え」のラベルとselectを横並びにします。
    *
-   * グリッド・リスト切替ボタンと同じ文字サイズ・太さを使用します。
+   * グリッド・リスト切替ボタンと同じ
+   * 文字サイズ・太さを使用します。
    */
   .blog-sort-label {
     display: flex;
@@ -53,9 +56,6 @@
   /**
    * 並び替えselectの見た目を、
    * グリッド・リスト切替UIに合わせます。
-   *
-   * var(--surface)を使用することで、
-   * ライト・ダークモード双方の背景色へ自動的に追従します。
    */
   .blog-sort-select {
     min-height: 38px;
@@ -79,7 +79,7 @@
 
   /**
    * マウスを乗せた際は、
-   * タグやその他の操作UIと同じようにブランドカラーを使用します。
+   * サイト共通のブランドカラーへ寄せます。
    */
   .blog-sort-select:hover {
     border-color:
@@ -99,7 +99,11 @@
    */
   .blog-sort-select:focus-visible {
     border-color: var(--brand);
-    outline: 3px solid rgb(89 104 234 / 0.35);
+
+    outline:
+      3px solid
+      rgb(89 104 234 / 0.35);
+
     outline-offset: 3px;
   }
 </style>
