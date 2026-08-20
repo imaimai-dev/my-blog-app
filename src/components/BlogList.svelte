@@ -138,10 +138,9 @@
     }
 
 
-    const tag =
-      new URLSearchParams(
-        window.location.search,
-      ).get('tag');
+    const tag = new URLSearchParams(
+      window.location.search,
+    ).get('tag');
 
 
     if (
@@ -171,10 +170,9 @@
     }
 
 
-    const sort =
-      new URLSearchParams(
-        window.location.search,
-      ).get('sort');
+    const sort = new URLSearchParams(
+      window.location.search,
+    ).get('sort');
 
 
     if (sort === 'oldest') {
@@ -202,10 +200,9 @@
     }
 
 
-    const url =
-      new URL(
-        window.location.href,
-      );
+    const url = new URL(
+      window.location.href,
+    );
 
 
     if (tag === 'all') {
@@ -233,9 +230,7 @@
      * 同じURLを履歴へ重複登録しないように、
      * URLが変化する場合だけpushStateを実行します。
      */
-    if (
-      nextUrl !== currentUrl
-    ) {
+    if (nextUrl !== currentUrl) {
       window.history.pushState(
         {},
         '',
@@ -274,11 +269,10 @@
    * 検索またはタグ絞り込みが
    * 行われているか判定します。
    */
-  const hasActiveFilters =
-    $derived(
-      query.trim().length > 0 ||
-      selectedTag !== 'all',
-    );
+  const hasActiveFilters = $derived(
+    query.trim().length > 0 ||
+    selectedTag !== 'all',
+  );
 
 
   /**
@@ -289,8 +283,7 @@
     [
       ...new Set(
         posts.flatMap(
-          (post) =>
-            getPostTags(post),
+          (post) => getPostTags(post),
         ),
       ),
     ].sort(),
@@ -307,107 +300,112 @@
    * 2. 新しい順・古い順による並び替え
    * 3. limitによる表示件数の制限
    */
-  const filteredPosts =
-    $derived(
-      posts
+  const filteredPosts = $derived(
+    posts
+      .filter((post) => {
+        const keyword =
+          query
+            .trim()
+            .toLowerCase();
+
+
+        const postTags =
+          getPostTags(post);
+
 
         /**
-         * 検索キーワードとタグによって
-         * 記事を絞り込みます。
+         * 検索文字列が空の場合は、
+         * すべての記事を検索条件に一致させます。
+         *
+         * 検索文字列がある場合は、
+         * タイトル・説明文・タグを検索します。
          */
-        .filter((post) => {
-          const keyword =
-            query
-              .trim()
-              .toLowerCase();
-
-
-          const postTags =
-            getPostTags(post);
-
-
-          const matchesQuery =
-            keyword.length === 0 ||
-            post.title
-              .toLowerCase()
-              .includes(keyword) ||
-            post.description
-              .toLowerCase()
-              .includes(keyword) ||
-            postTags.some(
-              (tag) =>
-                tag
-                  .toLowerCase()
-                  .includes(keyword),
-            );
-
-
-          const matchesTag =
-            selectedTag === 'all' ||
-            postTags.includes(
-              selectedTag,
-            );
-
-
-          return (
-            matchesQuery &&
-            matchesTag
+        const matchesQuery =
+          keyword.length === 0 ||
+          post.title
+            .toLowerCase()
+            .includes(keyword) ||
+          post.description
+            .toLowerCase()
+            .includes(keyword) ||
+          postTags.some(
+            (tag) =>
+              tag
+                .toLowerCase()
+                .includes(keyword),
           );
-        })
 
 
         /**
-         * filter()で作られた新しい配列を
-         * 公開日によって並び替えます。
+         * 「すべて」の場合は全記事を対象にし、
+         * タグ選択時は該当タグの記事だけを対象にします。
          */
-        .sort((a, b) => {
-          const aDate =
-            new Date(
-              a.pubDate,
-            ).getTime();
-
-
-          const bDate =
-            new Date(
-              b.pubDate,
-            ).getTime();
-
-
-          /**
-           * 新しい順の場合は、
-           * 日付の大きい記事を前へ配置します。
-           */
-          if (
-            sortOrder === 'newest'
-          ) {
-            return (
-              bDate -
-              aDate
-            );
-          }
-
-
-          /**
-           * 古い順の場合は、
-           * 日付の小さい記事を前へ配置します。
-           */
-          return (
-            aDate -
-            bDate
+        const matchesTag =
+          selectedTag === 'all' ||
+          postTags.includes(
+            selectedTag,
           );
-        })
+
+
+        return (
+          matchesQuery &&
+          matchesTag
+        );
+      })
+
+
+      /**
+       * filter()で生成された新しい配列を
+       * 公開日によって並び替えます。
+       */
+      .sort((a, b) => {
+        const aDate =
+          new Date(
+            a.pubDate,
+          ).getTime();
+
+
+        const bDate =
+          new Date(
+            b.pubDate,
+          ).getTime();
 
 
         /**
-         * 並び替えが完了した後で、
-         * 指定された表示件数までに制限します。
+         * 新しい順の場合は、
+         * 日付が大きい記事を前へ配置します。
          */
-        .slice(
-          0,
-          limit ??
-            posts.length,
-        ),
-    );
+        if (
+          sortOrder === 'newest'
+        ) {
+          return (
+            bDate -
+            aDate
+          );
+        }
+
+
+        /**
+         * 古い順の場合は、
+         * 日付が小さい記事を前へ配置します。
+         */
+        return (
+          aDate -
+          bDate
+        );
+      })
+
+
+      /**
+       * 並び替え完了後に、
+       * 指定された表示件数までに制限します。
+       */
+      .slice(
+        0,
+        limit ??
+          posts.length,
+      ),
+  );
 
 
   /**
@@ -476,14 +474,12 @@
 
 
     /**
-     * ブラウザの「戻る」「進む」によって
-     * 履歴が移動した際、
-     * URLに合わせてタグ選択状態を更新します。
-     *
-     * sortの履歴追従は次の変更で対応します。
+     * ブラウザの「戻る」「進む」で履歴が移動した際、
+     * 現在のURLからタグと並び順の両方を復元します。
      */
     const handlePopState = () => {
       syncTagFromUrl();
+      syncSortFromUrl();
     };
 
 
@@ -570,8 +566,7 @@
       <button
         type="button"
         class:active={view === 'grid'}
-        onclick={() =>
-          changeView('grid')}
+        onclick={() => changeView('grid')}
         aria-pressed={view === 'grid'}
       >
         <svg
@@ -595,8 +590,7 @@
       <button
         type="button"
         class:active={view === 'list'}
-        onclick={() =>
-          changeView('list')}
+        onclick={() => changeView('list')}
         aria-pressed={view === 'list'}
       >
         <svg
@@ -627,11 +621,8 @@
     >
       <button
         type="button"
-        class:active={
-          selectedTag === 'all'
-        }
-        onclick={() =>
-          selectTag('all')}
+        class:active={selectedTag === 'all'}
+        onclick={() => selectTag('all')}
       >
         すべて
       </button>
@@ -640,11 +631,8 @@
       {#each tags as tag}
         <button
           type="button"
-          class:active={
-            selectedTag === tag
-          }
-          onclick={() =>
-            selectTag(tag)}
+          class:active={selectedTag === tag}
+          onclick={() => selectTag(tag)}
         >
           #{tag}
         </button>
@@ -707,12 +695,8 @@
 
 
 <div
-  class:post-grid={
-    view === 'grid'
-  }
-  class:post-list={
-    view === 'list'
-  }
+  class:post-grid={view === 'grid'}
+  class:post-list={view === 'list'}
 >
   {#each filteredPosts as post (post.id)}
     <a
@@ -732,9 +716,7 @@
       <div class="card-body">
         <div class="meta-row">
           <time datetime={post.pubDate}>
-            {formatDate(
-              post.pubDate,
-            )}
+            {formatDate(post.pubDate)}
           </time>
 
           <span aria-hidden="true">
@@ -745,8 +727,7 @@
             {Math.max(
               1,
               Math.ceil(
-                post.description
-                  .length / 120,
+                post.description.length / 120,
               ),
             )} min read
           </span>
@@ -1042,10 +1023,7 @@
 
     box-shadow:
       0 8px 24px
-      rgb(
-        17 24 39 /
-        0.045
-      );
+      rgb(17 24 39 / 0.045);
 
     transition:
       transform 180ms ease,
@@ -1062,11 +1040,8 @@
         var(--line)
       );
 
-    box-shadow:
-      var(--shadow-card);
-
-    transform:
-      translateY(-5px);
+    box-shadow: var(--shadow-card);
+    transform: translateY(-5px);
   }
 
 
@@ -1074,11 +1049,8 @@
     position: relative;
     overflow: hidden;
     aspect-ratio: 1.92 / 1;
-    border-bottom:
-      1px solid
-      var(--line);
-    background:
-      var(--brand-soft);
+    border-bottom: 1px solid var(--line);
+    background: var(--brand-soft);
   }
 
 
@@ -1092,18 +1064,13 @@
   }
 
 
-  .post-card:hover
-  .thumbnail img {
-    transform:
-      scale(1.025);
+  .post-card:hover .thumbnail img {
+    transform: scale(1.025);
   }
 
 
   .card-body {
-    padding:
-      1.15rem
-      1.2rem
-      1.25rem;
+    padding: 1.15rem 1.2rem 1.25rem;
   }
 
 
@@ -1164,13 +1131,7 @@
 
   .post-list .post-card {
     display: grid;
-
-    grid-template-columns:
-      minmax(
-        210px,
-        31%
-      )
-      1fr;
+    grid-template-columns: minmax(210px, 31%) 1fr;
   }
 
 
@@ -1178,9 +1139,7 @@
     height: 100%;
     min-height: 180px;
     aspect-ratio: auto;
-    border-right:
-      1px solid
-      var(--line);
+    border-right: 1px solid var(--line);
     border-bottom: 0;
   }
 
@@ -1189,10 +1148,7 @@
     display: flex;
     flex-direction: column;
     justify-content: center;
-
-    padding:
-      1.35rem
-      1.55rem;
+    padding: 1.35rem 1.55rem;
   }
 
 
@@ -1207,9 +1163,7 @@
     min-height: 240px;
     place-items: center;
     align-content: center;
-    border:
-      1px dashed
-      var(--line);
+    border: 1px dashed var(--line);
     border-radius: 24px;
     color: var(--muted);
     text-align: center;
@@ -1234,9 +1188,7 @@
 
   .empty-reset {
     margin-top: 1rem;
-    border:
-      1px solid
-      var(--line);
+    border: 1px solid var(--line);
     border-radius: 999px;
     background: var(--surface);
     padding: 0.55rem 0.9rem;
@@ -1255,8 +1207,7 @@
         var(--line)
       );
 
-    background:
-      var(--brand-soft);
+    background: var(--brand-soft);
   }
 
 
@@ -1309,10 +1260,7 @@
       min-height: auto;
       aspect-ratio: 1.92 / 1;
       border-right: 0;
-
-      border-bottom:
-        1px solid
-        var(--line);
+      border-bottom: 1px solid var(--line);
     }
   }
 </style>
